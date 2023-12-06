@@ -30,8 +30,38 @@ keywords = [
     "genomics",
     "hgvs",
     "variation"
-    ]
+]
+dependencies = [
+    "attrs>=17.4.0",  # https://github.com/biocommons/hgvs/issues/473
+    "biocommons.seqrepo>=0.6.5",
+    "bioutils>=0.4.0,<1.0",
+    "configparser>=3.3.0",
+    "ipython",
+    "parsley",
+    "psycopg2",
+    "six",
+]
 dynamic = ["version"]
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "flake8",
+    "ipython",
+    "isort",
+    "jupyter",
+    "pytest>=5.3",
+    "pytest-cov>=2.8",
+    "pytest-recording",
+    "restview",
+    "setuptools",
+    "sphinx",
+    "sphinx_rtd_theme",
+    "sphinxcontrib-fulltoc>=1.1",
+    "tox",
+    "vcrpy",
+    "yapf",
+]
 
 [project.urls]
 "Homepage" = "https://github.com/biocommons/hgvs"
