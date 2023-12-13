@@ -429,6 +429,18 @@ class VariantMapper(object):
 
         """
 
+        var_p = self._c_to_p(var_c, pro_ac=None)
+
+        var_c_has_nonzero_offset = (
+            getattr(var_c.posedit.pos.start, 'offset', 0) != 0 or getattr(var_c.posedit.pos.end, 'offset', 0) != 0
+        )
+        if var_c.posedit.edit.type in ['ins', 'dup'] and var_c_has_nonzero_offset and var_p.posedit is None:
+            raise HGVSUnsupportedOperationError('c_to_p not supported on VariantMapper for this var_c, try AssemblyMapper')
+
+        return var_p
+
+
+    def _c_to_p(self, var_c, pro_ac=None):
         if not (var_c.type == "c"):
             raise HGVSInvalidVariantError("Expected a cDNA (c.) variant; got " + str(var_c))
         if self._validator:

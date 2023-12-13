@@ -163,6 +163,12 @@ class Test_VariantMapper_Exceptions(unittest.TestCase):
         with self.assertRaises(HGVSError):
             var_p = self.vm.c_to_p(var_c)
 
+    def test_map_of_ins_splice_region_preserved(self):
+        hgvs_c = "NM_004119.2:c.1837+21_1837+22insCGAGAGAATATGAATATGATCTCAAATGGGAGTTTCCAAGAGAAAATTTAGAGTTTGGTAAGAATGGAATGTGCCAAA"
+        var_c = self.hp.parse_hgvs_variant(hgvs_c)
+        with self.assertRaises(HGVSError):
+            var_p = self.vm.c_to_p(var_c)
+
 
 if __name__ == "__main__":
     unittest.main()

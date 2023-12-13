@@ -173,7 +173,22 @@ class AssemblyMapper(VariantMapper):
         return self._maybe_normalize(var_out)
 
     def c_to_p(self, var_c):
-        var_out = super(AssemblyMapper, self).c_to_p(var_c)
+        try:
+            var_out = super(AssemblyMapper, self).c_to_p(var_c)
+        except HGVSUnsupportedOperationError:
+            if self._fetch_AlignmentMapper(tx_ac=var_c.ac).strand == 1:
+                normalizer = hgvs.normalizer.Normalizer(
+                    self._norm.hdp, alt_aln_method=self.alt_aln_method, validate=False, shuffle_direction=5
+                )
+            else:
+                normalizer = hgvs.normalizer.Normalizer(
+                    self._norm.hdp, alt_aln_method=self.alt_aln_method, validate=False, shuffle_direction=3
+                )
+            var_g = self.c_to_g(var_c)
+            var_g = normalizer.normalize(var_g)
+            var_c = self.g_to_c(var_g, var_c.ac)
+            var_out = super(AssemblyMapper, self)._c_to_p(var_c)
+
         return self._maybe_normalize(var_out)
 
     def relevant_transcripts(self, var_g):
