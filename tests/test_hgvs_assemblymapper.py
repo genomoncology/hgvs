@@ -261,6 +261,16 @@ class Test_VariantMapper(unittest.TestCase):
         self.assertEqual(str(var_p), hgvs_p)
 
 
+    def test_map_of_ins_splice_region_preserved(self):
+        hgvs_c = "NM_004119.2:c.1837+21_1837+22insCGAGAGAATATGAATATGATCTCAAATGGGAGTTTCCAAGAGAAAATTTAGAGTTTGGTAAGAATGGAATGTGCCAAA"
+        hgvs_p = "NP_004110.2:p.(Lys614_Val615insAsnGlyMetCysGlnThrArgGluTyrGluTyrAspLeuLysTrpGluPheProArgGluAsnLeuGluPheGlyLys)"
+
+        var_c = self.hp.parse_hgvs_variant(hgvs_c)
+        var_p = self.am.c_to_p(var_c)
+
+        self.assertEqual(str(var_p), hgvs_p)
+
+
 class Test_RefReplacement(unittest.TestCase):
     test_cases = [
         # These casese attempt to test reference update in four dimensions:
