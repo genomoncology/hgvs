@@ -202,7 +202,7 @@ class Test_VariantMapper(unittest.TestCase):
 
     def test_map_of_dup_intron_exon_boundary(self):
         hgvs_c = "NM_024529.4:c.132-1_132dup"
-        hgvs_p = "NP_078805.3:p.?"
+        hgvs_p = "NP_078805.3:p.(Thr45GlyfsTer65)"
 
         var_c = self.hp.parse_hgvs_variant(hgvs_c)
         var_p = self.am.c_to_p(var_c)
