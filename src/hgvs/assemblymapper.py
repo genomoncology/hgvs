@@ -186,8 +186,9 @@ class AssemblyMapper(VariantMapper):
             and var_out.posedit is None
         ):
             var_g = self.c_to_g(var_c)
+            strand = self._fetch_AlignmentMapper(tx_ac=var_c.ac).strand
             for shuffle_direction in [3, 5]:
-                shifted_var_g = self._far_shift(var_g, shuffle_direction)
+                shifted_var_g = self._far_shift(var_g, shuffle_direction, strand)
                 shifted_var_c = super(AssemblyMapper, self).g_to_c(
                     shifted_var_g, var_c.ac, alt_aln_method=self.alt_aln_method
                 )
@@ -312,7 +313,7 @@ class AssemblyMapper(VariantMapper):
                 # fall through to return unnormalized variant
         return var
 
-    def _far_shift(self, var_g, shuffle_direction):
+    def _far_shift(self, var_g, shuffle_direction, strand):
         """Attempt to shift a variant all the way left or right. Rewrite
         duplications as insertions so that the change is shifted as far as
         possible."""
@@ -322,7 +323,7 @@ class AssemblyMapper(VariantMapper):
         shifted_var_g = normalizer.normalize(var_g)
         if shifted_var_g.posedit.edit.type == 'dup':
             self._replace_reference(shifted_var_g)
-            if shuffle_direction == 3:
+            if (strand > 0 and shuffle_direction == 3) or (strand < 0 and shuffle_direction == 5):
                 shifted_var_g.posedit = PosEdit(
                     pos=Interval(
                         start=SimplePosition(base=shifted_var_g.posedit.pos.start.base-1),
