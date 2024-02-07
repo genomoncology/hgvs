@@ -13,6 +13,9 @@ from hgvs.exceptions import (
     HGVSUnsupportedOperationError,
 )
 from hgvs.variantmapper import VariantMapper
+from hgvs.posedit import PosEdit
+from hgvs.edit import NARefAlt
+from hgvs.location import SimplePosition, Interval
 
 _logger = logging.getLogger(__name__)
 
@@ -180,17 +183,18 @@ class AssemblyMapper(VariantMapper):
             and (var_c.posedit.pos.start.offset != 0 or var_c.posedit.pos.end.offset != 0)
             and var_out.posedit is None
         ):
-            if self._fetch_AlignmentMapper(tx_ac=var_c.ac).strand == 1:
-                normalizer = hgvs.normalizer.Normalizer(
-                    self._norm.hdp, alt_aln_method=self.alt_aln_method, validate=False, shuffle_direction=5
+            var_g = self.c_to_g(var_c)
+            strand = self._fetch_AlignmentMapper(tx_ac=var_c.ac).strand
+
+            for shuffle_direction in [3, 5]:
+                shifted_var_g = self._far_shift(var_g, shuffle_direction, strand)
+                shifted_var_c = super(AssemblyMapper, self).g_to_c(
+                    shifted_var_g, var_c.ac, alt_aln_method=self.alt_aln_method
                 )
-            else:
-                normalizer = hgvs.normalizer.Normalizer(
-                    self._norm.hdp, alt_aln_method=self.alt_aln_method, validate=False, shuffle_direction=3
-                )
-            var_g = normalizer.normalize(self.c_to_g(var_c))
-            var_c = self.g_to_c(var_g, var_c.ac)
-            var_out = super(AssemblyMapper, self)._c_to_p(var_c)
+                var_out = super(AssemblyMapper, self)._c_to_p(shifted_var_c)
+
+                if var_out.posedit is not None:
+                    break
 
         return self._maybe_normalize(var_out)
 
@@ -286,6 +290,34 @@ class AssemblyMapper(VariantMapper):
                 _logger.info(str(e) + "; returning unnormalized variant")
                 # fall through to return unnormalized variant
         return var
+
+    def _far_shift(self, var_g, shuffle_direction, strand):
+        """Attempt to shift a variant all the way left or right. Rewrite
+        duplications as insertions so that the change is shifted as far as
+        possible."""
+        normalizer = hgvs.normalizer.Normalizer(
+            self._norm.hdp, alt_aln_method=self.alt_aln_method, validate=False, shuffle_direction=shuffle_direction
+        )
+        shifted_var_g = normalizer.normalize(var_g)
+        if shifted_var_g.posedit.edit.type == 'dup':
+            self._replace_reference(shifted_var_g)
+            if (strand == 1 and shuffle_direction == 3) or (strand == -1 and shuffle_direction == 5):
+                shifted_var_g.posedit = PosEdit(
+                    pos=Interval(
+                        start=SimplePosition(base=shifted_var_g.posedit.pos.start.base-1),
+                        end=SimplePosition(base=shifted_var_g.posedit.pos.start.base),
+                    ),
+                    edit=NARefAlt(ref=None, alt=shifted_var_g.posedit.edit.ref)
+                )
+            else:
+                shifted_var_g.posedit = PosEdit(
+                    pos=Interval(
+                        start=SimplePosition(base=shifted_var_g.posedit.pos.end.base),
+                        end=SimplePosition(base=shifted_var_g.posedit.pos.end.base+1),
+                    ),
+                    edit=NARefAlt(ref=None, alt=shifted_var_g.posedit.edit.ref)
+                )
+        return shifted_var_g
 
 
 # <LICENSE>
