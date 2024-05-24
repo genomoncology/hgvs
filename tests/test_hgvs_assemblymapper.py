@@ -249,6 +249,14 @@ class Test_VariantMapper(unittest.TestCase):
 
         self.assertEqual(str(var_p), hgvs_p)
 
+        hgvs_c = "NM_182758.2:c.2953-31_2953-26dup"
+        hgvs_p = "NP_877435.2:p.?"
+
+        var_c = self.hp.parse_hgvs_variant(hgvs_c)
+        var_p = self.am37.c_to_p(var_c)
+
+        self.assertEqual(str(var_p), hgvs_p)
+
 
 class Test_RefReplacement(unittest.TestCase):
     test_cases = [
