@@ -1,7 +1,7 @@
 import os
 
 import hgvs
-from hgvs.exceptions import HGVSError
+from hgvs.exceptions import HGVSError, HGVSUnsupportedOperationError
 import pytest
 from support import CACHE
 import support.mock_input_source as mock_input_data_source
@@ -81,7 +81,8 @@ real_cases = [
     {
         "name": "ins with broken cigar mapping",
         "var_c": "NM_004799.2:c.71-7048_71-7047insATAT",
-        "var_p": "NP_004790.2:p.?"
+        "var_p": "NP_004790.2:p.?",
+        "exc": HGVSUnsupportedOperationError
     },
     {
         "name": "del with broken cigar mapping",
