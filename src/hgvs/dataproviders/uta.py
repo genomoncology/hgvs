@@ -546,7 +546,7 @@ class UTA_postgresql(UTABase):
             host=self.url.hostname,
             port=self.url.port,
             database=self.url.database,
-            user=urlparse.unquot(self.url.username),
+            user=urlparse.unquote(self.url.username),
             password=urlparse.unquote(self.url.password),
             application_name=self.application_name + "/" + hgvs.__version__,
         )
