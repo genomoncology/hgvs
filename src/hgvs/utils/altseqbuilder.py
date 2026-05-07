@@ -292,14 +292,15 @@ class AltSeqBuilder:
             and self._var_c.posedit.pos.end.datum == Datum.CDS_END
         ):
             is_frameshift = True
-        if alt:
-            insert_seq_idx = start if ref is not None else start + 1
+        if alt and ref is None:
+            insert_seq_idx = start + 1
             if insert_seq_idx >= cds_start - 1:
                 stop_end = self._insert_stop_seq_end(alt, insert_seq_idx, cds_start)
                 if stop_end is not None:
                     is_frameshift = False
-                    del seq[stop_end:]
-                    cds_stop = stop_end
+                    alt_end = insert_seq_idx + len(alt)
+                    del seq[stop_end:alt_end]
+                    cds_stop -= alt_end - stop_end
         # use max of mod 3 value and 1 (in event that indel starts in the 5'utr range)
         variant_start_aa = max(int(math.ceil((self._var_c.posedit.pos.start.base) / 3.0)), 1)
 
@@ -331,8 +332,9 @@ class AltSeqBuilder:
             stop_end = self._insert_stop_seq_end(dup_seq, end, cds_start)
             if stop_end is not None:
                 is_frameshift = False
-                del seq[stop_end:]
-                cds_stop = stop_end
+                dup_end = end + len(dup_seq)
+                del seq[stop_end:dup_end]
+                cds_stop -= dup_end - stop_end
         variant_start_aa = int(math.ceil((self._var_c.posedit.pos.end.base + 1) / 3.0))
 
         alt_data = AltTranscriptData(
