@@ -3,6 +3,8 @@ import pytest
 testdata = [
     ('NM_000159.4:c.1074_1075insAGTTGAAGGACC', 'NP_000150.1:p.(Gln359_Lys438delinsSer)'),
     ('NM_000159.4:c.1074_1075insAGTTGAAGGAC', 'NP_000150.1:p.(Gln359_Lys438delinsSer)'),
+    ('NM_004380.3:c.138_139insTCATCATGAGCTCCC', 'NP_004371.2:p.(Asn47_Leu2442delinsSerSer)'),
+    ('NM_000038.6:c.4189_4197delinsATATAAAAAA', 'NP_000029.2:p.(Glu1397_Val2843delinsIle)')
 ]
 
 @pytest.mark.parametrize("var_c_str,var_p_str", testdata)
