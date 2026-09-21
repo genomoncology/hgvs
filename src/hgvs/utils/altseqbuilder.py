@@ -359,10 +359,15 @@ class AltSeqBuilder:
         raise NotImplementedError(msg)
 
     def _insert_stop_seq_end(self, insert_seq, insert_seq_idx, cds_start):
-        """If translating the inserted bases in the CDS reading frame yields a stop codon, return the
-        sequence index just past that stop codon; else None. When non-None, translation halts
-        inside the insertion, so the variant terminates there and is not a frameshift even if the
-        insertion length is not divisible by 3."""
+        """If translating the inserted bases in the CDS reading frame yields a
+        stop codon, return the sequence index through which the insertion must
+        be retained: the end of the whole CDS codons spanned by the inserted
+        stop clamped to the end of the insertion else None. Retaining whole
+        codons keeps the downstream reference in frame. When the stop ends
+        within the last base(s) of the insertion there is nothing to trim and
+        the whole insertion is kept. When non-None, translation halts inside the
+        insertion, so the variant terminates there and is not a frameshift even
+        if the insertion length is not divisible by 3."""
         frame_offset = (insert_seq_idx - (cds_start - 1)) % 3
         framed = ("N" * frame_offset) + "".join(insert_seq)
         ins_aa = translate_cds(
@@ -371,7 +376,8 @@ class AltSeqBuilder:
         stop_aa_idx = ins_aa.find("*")
         if stop_aa_idx == -1:
             return None
-        return insert_seq_idx + (stop_aa_idx + 1) * 3 - frame_offset
+        stop_end = insert_seq_idx + (stop_aa_idx + 1) * 3
+        return min(stop_end, insert_seq_idx + len(insert_seq))
 
     def _setup_incorporate(self):
         """Helper to setup incorporate functions

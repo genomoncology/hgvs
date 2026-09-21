@@ -12,6 +12,15 @@ import pytest
     ('NM_004985.5:c.567_*1insTAGAAA', 'NP_004976.2:p.?'),
     ('NM_000203.4:c.1960T>C', 'NP_000194.2:p.(Ter654ArgextTer?)'),
     ('NM_000203.4:c.1730del', 'NP_000194.2:p.(Cys577SerfsTer?)'),
+    # --- insertion point inside a codon (frame_offset != 0); without the fix these
+    # --- render as a delins removing the C-terminus instead of an insertion
+    ('NM_000159.4:c.1073_1074insTAGTTGAAGGA', 'NP_000150.1:p.(Asp358_Gln359insSerTer)'),
+    # insertion rewrites codon 358, so this stays a delins at that residue
+    ('NM_000159.4:c.1072_1073insTTAGTTGAAGG', 'NP_000150.1:p.(Asp358delinsValSerTer)'),
+    # edge case: stop completes exactly at the end of the insertion; the retained
+    # length cannot be rounded up, the whole insertion is kept, and translation
+    # halts at the inserted stop (a nonsense variant)
+    ('NM_000159.4:c.1073_1074insTTAG', 'NP_000150.1:p.(Gln359Ter)'),
 ])
 def test_c_to_p(var_c_str, var_p_str, parser, am37):
     var_c = parser.parse(var_c_str)
