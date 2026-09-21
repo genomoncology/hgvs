@@ -12,6 +12,12 @@ import pytest
     ('NM_004985.5:c.567_*1insTAGAAA', 'NP_004976.2:p.?'),
     ('NM_000203.4:c.1960T>C', 'NP_000194.2:p.(Ter654ArgextTer?)'),
     ('NM_000203.4:c.1730del', 'NP_000194.2:p.(Cys577SerfsTer?)'),
+    # Insertion point inside a codon (frame_offset 2)
+    ('NM_000159.4:c.1073_1074insTAGTTGAAGGA', 'NP_000150.1:p.(Asp358_Gln359insSerTer)'),
+    # Insertion splits codon 358 (frame_offset 1) and changes Asp to Val
+    ('NM_000159.4:c.1072_1073insTTAGTTGAAGG', 'NP_000150.1:p.(Asp358delinsValSerTer)'),
+    # Stop ends exactly at the end of the insertion, giving a nonsense variant
+    ('NM_000159.4:c.1073_1074insTTAG', 'NP_000150.1:p.(Gln359Ter)'),
 ])
 def test_c_to_p(var_c_str, var_p_str, parser, am37):
     var_c = parser.parse(var_c_str)
