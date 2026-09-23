@@ -15,7 +15,16 @@ import pytest
     # Insertion point inside a codon (frame_offset 2)
     ('NM_000159.4:c.1073_1074insTAGTTGAAGGA', 'NP_000150.1:p.(Asp358_Gln359insSerTer)'),
     # Insertion splits codon 358 (frame_offset 1) and changes Asp to Val
-    ('NM_000159.4:c.1072_1073insTTAGTTGAAGG', 'NP_000150.1:p.(Asp358delinsValSerTer)'),
+    ('NM_000159.4:c.1072_1073insTTAGTTGAAGG', 'NP_000150.1:p.(Lys357_Asp358insValSerTer)'),
+    # Same protein as above with a different untranslated base after the stop
+    ('NM_000159.4:c.1072_1073insTTAGTTGAGGG', 'NP_000150.1:p.(Lys357_Asp358insValSerTer)'),
+    ('NM_000159.4:c.1072_1073insTTAGTTGACGG', 'NP_000150.1:p.(Lys357_Asp358insValSerTer)'),
+    # Stop ends one base before the end of the insertion (frame_offset 2)
+    ('NM_000159.4:c.1073_1074insATAGG', 'NP_000150.1:p.(Lys357_Asp358insGluTer)'),
+    # Codon-aligned dup that encodes a stop
+    ('NM_000159.4:c.1061_1080dup', 'NP_000150.1:p.(Asp360_Lys361insAlaAlaTer)'),
+    # Mid-codon dup (frame_offset 1) where the split Lys361 codon becomes Thr
+    ('NM_000159.4:c.1062_1081dup', 'NP_000150.1:p.(Asp360_Lys361insThrAlaTer)'),
     # Stop ends exactly at the end of the insertion, giving a nonsense variant
     ('NM_000159.4:c.1073_1074insTTAG', 'NP_000150.1:p.(Gln359Ter)'),
 ])
