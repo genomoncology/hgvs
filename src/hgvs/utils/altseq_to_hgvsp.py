@@ -67,6 +67,15 @@ class AltSeqToHgvsp:
                     self._is_frameshift = False
                 variants.append({"start": start, "ins": insertion, "del": deletion})
                 do_delins = False
+            elif self._alt_seq[: self._alt_seq.find("*") + 1] == self._ref_seq:
+                # Translation halts at an in-frame stop created at the reference
+                # stop position, so the protein is unchanged and the stop codon is
+                # retained. Report it at the reference stop, like a synonymous
+                # substitution of the stop codon.
+                start = len(self._ref_seq)
+                variants.append({"start": start, "ins": "*", "del": "*"})
+                self._is_frameshift = False
+                do_delins = False
             elif self._is_substitution:
                 if len(self._ref_seq) == len(self._alt_seq):
                     diff_pos = [

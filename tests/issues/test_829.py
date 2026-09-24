@@ -30,6 +30,24 @@ import pytest
     ('NM_000159.4:c.1061_1080dup', 'NP_000150.1:p.(Asp360_Lys361insAlaAlaTer)'),
     # mid-codon dup (f = 1); Lys361 codon becomes Thr
     ('NM_000159.4:c.1062_1081dup', 'NP_000150.1:p.(Asp360_Lys361insThrAlaTer)'),
+    # --- stop created at the reference stop position; the protein is unchanged
+    # --- and the stop is retained at Ter532 (NP_078805.3 is 532 residues with the stop)
+    ('NM_024529.5:c.1593_1594insTGA', 'NP_078805.3:p.(Ter532Ter)'),
+    ('NM_024529.5:c.1593_1594insTAA', 'NP_078805.3:p.(Ter532Ter)'),
+    ('NM_024529.5:c.1593_1594insTAG', 'NP_078805.3:p.(Ter532Ter)'),
+    # inserted bases after the inserted stop are never translated
+    ('NM_024529.5:c.1593_1594insTAGAAA', 'NP_078805.3:p.(Ter532Ter)'),
+    # insertion inside the stop codon rebuilds a stop in place (T|AAT|GA -> TAA TGA)
+    ('NM_024529.5:c.1594_1595insAAT', 'NP_078805.3:p.(Ter532Ter)'),
+    # duplication of the stop codon; same variant as c.1593_1594insTGA
+    ('NM_024529.5:c.1594_1596dup', 'NP_078805.3:p.(Ter532Ter)'),
+    # --- regressions near the stop
+    # already reported at the reference stop before this change
+    ('NM_024529.5:c.1595_1596insAGT', 'NP_078805.3:p.(Ter532Ter)'),
+    # a residue inserted before a retained stop is an extension, not stop-retained
+    ('NM_024529.5:c.1593_1594insGCTTGA', 'NP_078805.3:p.(Ter532AlaextTer2)'),
+    # stop codon destroyed
+    ('NM_024529.5:c.1595_1596insGAT', 'NP_078805.3:p.(Ter532TrpextTer30)'),
     # edge case: stop completes exactly at the end of the insertion; the retained
     # length cannot be rounded up, the whole insertion is kept, and translation
     # halts at the inserted stop (a nonsense variant)
