@@ -277,12 +277,12 @@ class AltSeqBuilder:
         if alt and ref is None:
             insert_seq_idx = start + 1
             if insert_seq_idx >= cds_start - 1:
-                trimmed_cds_stop = self._trim_insert_at_stop(
-                    seq, cds_start, cds_stop, alt, insert_seq_idx
-                )
-                if trimmed_cds_stop is not None:
+                stop_end, frame_offset = self._find_insert_stop(cds_start, alt, insert_seq_idx)
+                if stop_end is not None:
                     is_frameshift = False
-                    cds_stop = trimmed_cds_stop
+                    insert_end = insert_seq_idx + len(alt)
+                    seq[stop_end:insert_end] = seq[insert_seq_idx - frame_offset : insert_seq_idx]
+                    cds_stop += frame_offset - (insert_end - stop_end)
         # use max of mod 3 value and 1 (in event that indel starts in the 5'utr range)
         variant_start_aa = max(math.ceil(self._var_c.posedit.pos.start.base / 3.0), 1)
 
@@ -313,10 +313,12 @@ class AltSeqBuilder:
 
         is_frameshift = len(dup_seq) % 3 != 0
         if end >= cds_start - 1:
-            trimmed_cds_stop = self._trim_insert_at_stop(seq, cds_start, cds_stop, dup_seq, end)
-            if trimmed_cds_stop is not None:
+            stop_end, frame_offset = self._find_insert_stop(cds_start, dup_seq, end)
+            if stop_end is not None:
                 is_frameshift = False
-                cds_stop = trimmed_cds_stop
+                insert_end = end + len(dup_seq)
+                seq[stop_end:insert_end] = seq[end - frame_offset : end]
+                cds_stop += frame_offset - (insert_end - stop_end)
         variant_start_aa = math.ceil((self._var_c.posedit.pos.end.base + 1) / 3.0)
 
         alt_data = AltTranscriptData(
@@ -357,24 +359,20 @@ class AltSeqBuilder:
         msg = f"hgvs c to p conversion does not support {self._var_c} type: repeats"
         raise NotImplementedError(msg)
 
-    def _trim_insert_at_stop(self, seq, cds_start, cds_stop, insert_seq, insert_seq_idx):
-        """If the inserted bases, read in the CDS frame, contain a stop codon,
-        trim the insertion in seq just past that stop and return the adjusted
-        cds_stop. Otherwise leave seq unchanged and return None.
+    def _find_insert_stop(self, cds_start, insert_seq, insert_seq_idx) -> tuple[int | None, int | None]:
+        """If translating the inserted bases in the CDS reading frame yields a
+        stop codon, return the sequence index just past that stop and the
+        frame_offset of the insertion point (0 to 2), else (None, None).
 
-        Translation halts at the inserted stop, so the bases after it are never
-        read. They are replaced with the reference bases of the codon that the
-        insertion point splits (frame_offset of them, 0 to 2). This keeps the
-        downstream reference in frame and rebuilds the split codon unchanged
-        right after the stop, so the protein description depends only on the
-        translated bases. Without it, leftover inserted bases would combine
-        with reference bases into an arbitrary codon and decide between an ins
-        and a delins description.
-
-        When a stop is found, translation halts inside the insertion, so the
-        variant terminates there and is not a frameshift even if the insertion
-        length is not divisible by 3.
-        """
+        Translation halts at the inserted stop, so the bases after it are
+        never read. The caller must replace the tail of the insertion (from
+        stop_end to the end of the inserted bases) with the frame_offset
+        reference bases immediately preceding the insertion point. This keeps
+        the downstream reference in frame and rebuilds the split codon
+        unchanged right after the stop, so the protein description depends
+        only on the bases that are actually translated. Without it, leftover
+        inserted bases would combine with reference bases into an arbitrary
+        codon and decide between an ins and a delins description."""
         frame_offset = (insert_seq_idx - (cds_start - 1)) % 3
         framed = ("N" * frame_offset) + "".join(insert_seq)
         ins_aa = translate_cds(
@@ -382,12 +380,8 @@ class AltSeqBuilder:
         )
         stop_aa_idx = ins_aa.find("*")
         if stop_aa_idx == -1:
-            return None
-        stop_end = insert_seq_idx + (stop_aa_idx + 1) * 3 - frame_offset
-        insert_end = insert_seq_idx + len(insert_seq)
-        split_codon_head = seq[insert_seq_idx - frame_offset : insert_seq_idx]
-        seq[stop_end:insert_end] = split_codon_head
-        return cds_stop - (insert_end - stop_end) + frame_offset
+            return None, None
+        return insert_seq_idx + (stop_aa_idx + 1) * 3 - frame_offset, frame_offset
 
     def _setup_incorporate(self):
         """Helper to setup incorporate functions
